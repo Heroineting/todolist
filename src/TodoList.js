@@ -1,81 +1,59 @@
-import React,{ Component } from 'react';
-import TodoItem from './TodoItem';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import './style.css';
+import React, { Component } from 'react';
+import TodoListUI from './TodoListUI';
+import { getChangeInputAction, getAddItemAction, getDeleteItemAction, getInitTodoListAction } from "./store/ActionCreator";
+import store from './store';
+import axios from 'axios';
 
 class TodoList extends Component{
   constructor(props){
     super(props);
-    this.state={
-      inputValue:'',
-      list:[]
-    }
+    this.state = store.getState();
+    this.handleStoreChange=this.handleStoreChange.bind(this);
     this.handleInputChange=this.handleInputChange.bind(this);
+    this.handleInputKeyUp=this.handleInputKeyUp.bind(this);
     this.handleBtnClick=this.handleBtnClick.bind(this);
     this.handleItemDelete=this.handleItemDelete.bind(this);
-    this.handleAddItem=this.handleAddItem.bind(this);
+    store.subscribe(this.handleStoreChange);
+  }
+  componentDidMount(){
+    axios.get('/api/list').then((res)=>{
+      const action=getInitTodoListAction(res.data);
+      store.dispatch(action);
+    })
   }
   render(){
     return (
-      <div>
-        <input
-          ref={(el)=>{this.input=el;}}
-          type='text'
-          id='inputValue'
-          value={this.state.inputValue}
-          onChange={this.handleInputChange}
-          onKeyUp={this.handleAddItem}
-        />
-        <button onClick={this.handleBtnClick}>Add Item</button>
-        <ul>
-          {this.getItem()}
-        </ul>
-      </div>
+      <TodoListUI
+        inputValue={this.state.inputValue}
+        list={this.state.list}
+        handleInputChange={this.handleInputChange}
+        handleInputKeyUp={this.handleInputKeyUp}
+        handleBtnClick={this.handleBtnClick}
+        handleItemDelete={this.handleItemDelete}
+      />
     );
   }
-  getItem(){
-    return(
-      <TransitionGroup className='todo-list'>
-        {
-          this.state.list.map((item,index)=>(
-            <CSSTransition
-              key={index}
-              timeout={500}
-              classNames='fade'
-            >
-              <TodoItem
-                item={item}
-                index={index}
-                handleItemDelete={this.handleItemDelete}
-              />
-            </CSSTransition>
-          ))
-        }
-      </TransitionGroup>
-    )
+  handleStoreChange(){
+    this.setState(store.getState());
   }
-  handleInputChange(){
-    this.setState(()=>({
-      inputValue:this.input.value
-    }));
+  handleInputChange(e){
+    const value=e.target.value;
+    const action=getChangeInputAction(value);
+    store.dispatch(action);
+  }
+  handleInputKeyUp(e){
+    if(e.keyCode===13){
+      const action=getAddItemAction();
+      store.dispatch(action);
+    }
   }
   handleBtnClick(){
-    this.setState((prevState)=>({
-      list:[...prevState.list,prevState.inputValue],
-      inputValue:''
-    }));
+    const action=getAddItemAction();
+    store.dispatch(action);
   }
   handleItemDelete(index){
-    this.setState((prevState)=>{
-      const list=prevState.list;
-      list.splice(index,1);
-      return {list};
-    })
-  }
-  handleAddItem(e){
-    if(e.keyCode===13){
-      this.handleBtnClick();
-    }
+    const action=getDeleteItemAction(index);
+    store.dispatch(action);
   }
 }
 
