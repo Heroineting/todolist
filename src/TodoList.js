@@ -1,20 +1,6 @@
-import React from 'react';
 import { connect } from 'react-redux';
 import { getChangeInputAction, getAddItemAction, getDeleteItemAction } from "./store/actionCreator";
-
-const TodoList = (props) => {
-  return (
-    <div>
-      <input type="text" value={props.inputValue} onChange={props.handleInputChange}/>
-      <button onClick={props.handleAddItem}>Add Item</button>
-      <ul>
-        {props.list.map((item, index) => (<li key={index} onClick={() => {
-          props.handleDeleteItem(index)
-        }}>{item}</li>))}
-      </ul>
-    </div>
-  )
-}
+import TodoListUI from './TodoListUI';
 
 const mapStateToProps = (state) => ({
   inputValue: state.inputValue,
@@ -35,4 +21,4 @@ const mapActionToProps = (dispatch) => ({
   }
 });
 
-export default connect(mapStateToProps, mapActionToProps)(TodoList);
+export default connect(mapStateToProps, mapActionToProps)(TodoListUI);
